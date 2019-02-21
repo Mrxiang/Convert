@@ -1,6 +1,18 @@
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.input.SAXBuilder;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 //value="zh-CHS"	中文(简体)
 //value="zh-CHT"
@@ -12,60 +24,70 @@ public class Translator {
 
     private static final String REQUEST_PATH = "http://localhost/server_url.php";
     private static final String BOUNDARY = "20140501";
-    public void  translate( ){
+
+    public  static String str;
+    public static String translateWithBING(String from, String to,String text) {
+        System.out.println( " 使用BING 翻译:"+from +" : "+ to+" : "+ text );
+        String  translateResult=null;
         try {
-            URL url = new URL(REQUEST_PATH);
-            HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-            httpConn.setConnectTimeout(3000); // 设置发起连接的等待时间，3s
-            httpConn.setReadTimeout(30000); // 设置数据读取超时的时间，30s
-            httpConn.setUseCaches(false); // 设置不使用缓存
-            httpConn.setDoOutput(true);
-            httpConn.setRequestMethod("POST");
+            CloseableHttpClient client = null;
+            CloseableHttpResponse response = null;
+            try {
+//                http://api.microsofttranslator.com/v2/Http.svc/Translate?appId=AFC76A66CF4F434ED080D245C30CF1E71C22959C&from=%s&to=%s&text=%s
+                str = Utils.BING_TRAMSLATOR_BEGIN +from+"&to="+to+"&text="+ text;
+                System.out.println( str );
+                HttpGet httpGet = new HttpGet(str );
+//                HttpPost httpPost = new HttpPost(str );
 
-            httpConn.setRequestProperty("Connection", "Keep-Alive");
-            httpConn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; zh-CN; rv:1.9.2.6)");
-            httpConn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
-            OutputStream os = httpConn.getOutputStream();
-            BufferedOutputStream bos = new BufferedOutputStream(os);
+                client = HttpClients.createDefault();
+//                response = client.execute(httpPost);
+                response = client.execute(httpGet);
+                System.out.println( " status code: "+ response.getStatusLine().getStatusCode()  );
+                if(response != null && response.getStatusLine().getStatusCode() == 200) {
+                    HttpEntity entity = response.getEntity();
+                    String result = EntityUtils.toString(entity);
+                    System.out.println("Result:");
+                    System.out.println(result);
+                    System.out.println("End!");
+                    InputStream in = new ByteArrayInputStream(result.getBytes());
+                    InputStreamReader isr = new InputStreamReader(in, "UTF-8");
+                    SAXBuilder saxBuilder = new SAXBuilder();
 
-            String content = "--" + BOUNDARY + "\r\n";
-            content += "Content-Disposition: form-data; name=\"title\"" + "\r\n\r\n";
-            content += "我是post数据的值";
-            content += "\r\n--" + BOUNDARY + "\r\n";
-            content += "Content-Disposition: form-data; name=\"cover_img\"; filename=\"avatar.jpg\"\r\n";
-            content += "Content-Type: image/jpeg\r\n\r\n";
-            bos.write(content.getBytes());
+                    Document document = saxBuilder.build(isr);
+                    // 4.通过document对象获取xml文件的根节点
+                    Element rootElement = document.getRootElement();
+                    // 5.获取根节点下的子节点的List集合
+                    List<Element> rowList = rootElement.getChildren();
+                    // 继续进行解析
 
-            // 开始写出文件的二进制数据
-            FileInputStream fin = new FileInputStream(new File("avatar.jpg"));
-            BufferedInputStream bfi = new BufferedInputStream(fin);
-            byte[] buffer = new byte[4096];
-            int bytes = bfi.read(buffer, 0, buffer.length);
-            while (bytes != -1) {
-                bos.write(buffer, 0, bytes);
-                bytes = bfi.read(buffer, 0, buffer.length);
+                    if( rowList.size() == 0 ){
+                        translateResult = rootElement.getText();
+
+                        System.out.println( translateResult );
+                    }else{
+                        for (Element row : rowList) {
+                            System.out.println(row.toString());
+                        }
+                    }
+                }
+            } finally {
+                if (response != null) {
+                    response.close();
+                }
+                if (client != null) {
+                    client.close();
+                }
             }
-            bfi.close();
-            fin.close();
-            bos.write(("\r\n--" + BOUNDARY).getBytes());
-            bos.flush();
-            bos.close();
-            os.close();
-
-            // 读取返回数据
-            StringBuffer strBuf = new StringBuffer();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpConn.getInputStream()));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                strBuf.append(line).append("\n");
-            }
-            String res = strBuf.toString();
-            System.out.println(res);
-            reader.close();
-            httpConn.disconnect();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
+        return translateResult;
     }
+
+    public static boolean translateWithDictionary(String text, SDictionary dictionary ){
+
+//        dictionary.selectText( );
+        return false;
+    }
+
 }
