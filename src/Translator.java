@@ -13,6 +13,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 //value="zh-CHS"	中文(简体)
 //value="zh-CHT"
@@ -27,7 +29,17 @@ public class Translator {
 
     public  static String str;
     public static String translateWithBING(String from, String to,String text) {
+
+        if( isSpecialChar( text) ){
+//            return  null;
+        }
+        if( text.contains( " ") ){
+            text = text.replaceAll(" ", "%20");
+        }else if( text.contains( "?")){
+            text = text.replaceAll(" ", "%3F");
+        }
         System.out.println( " 使用BING 翻译:"+from +" : "+ to+" : "+ text );
+
         String  translateResult=null;
         try {
             CloseableHttpClient client = null;
@@ -84,10 +96,17 @@ public class Translator {
         return translateResult;
     }
 
-    public static boolean translateWithDictionary(String text, SDictionary dictionary ){
-
-//        dictionary.selectText( );
-        return false;
+    /**
+     * 判断是否含有特殊字符
+     *
+     * @param str
+     * @return true为包含，false为不包含
+     */
+    public static boolean isSpecialChar(String str) {
+        String regEx = "[%_`~!@#$^&*()+=|{}':;',\\[\\].<>/~！@#￥……&*（）——+|{}【】‘；：”“’。，、？]|\n|\r|\t";;
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(str);
+        return m.find();
     }
 
 }

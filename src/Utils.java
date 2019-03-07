@@ -87,10 +87,14 @@ public class Utils {
     }
 
 
-    public static final String CREATE_DICTIONARY_SQL = "create table dictionary(language_type varchar(255) not null,source_text text not null,translated_text text not null)";
-    public static final String QUERY_DICTIONARY_SQL = "select * from dictionary where language_type='%s' and source_text='%s'";
-    public static final String QUERY_DICTIONARY_COUNT_SQL = "select * from dictionary";
-    public static final String INSERT_DICTIONARY_SQL = "insert into dictionary(language_type, source_text, translated_text) values('%s', '%s', '%s')";
+    public static final String CREATE_DICTIONARY_SQL =
+            "create table if not exists dictionary(language_type varchar(255) not null,source_text text not null,translated_text text not null,primary key (language_type,source_text))";
+    public static final String QUERY_DICTIONARY_SQL =
+            "select * from dictionary where language_type='%s' and source_text='%s'";
+    public static final String QUERY_DICTIONARY_COUNT_SQL =
+            "select * from dictionary";
+    public static final String INSERT_DICTIONARY_SQL =
+            "insert into dictionary(language_type, source_text, translated_text) values(?, ?, ?)";
 
 
 

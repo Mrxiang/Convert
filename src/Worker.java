@@ -20,16 +20,15 @@ public class Worker {
 
     }
 
-    public void initDictionay(String languageType) {
-        System.out.println( "初始化字典");
-        dictionary = SDictionary.getInstance();
-        dictionary.setLanguageType( languageType );
-        int count = dictionary.getRowCount();
-        System.out.println( "字典有 " +count+" 项 ");
-    }
 
-
-    public  SDictionary getDictionary( ){
+    public  SDictionary getDictionary(String languageType ){
+        if( dictionary == null ){
+            System.out.println( "初始化字典");
+            dictionary = SDictionary.getInstance();
+            dictionary.setLanguageType( languageType );
+            int count = dictionary.getRowCount();
+            System.out.println( "字典有 " +count+" 项 ");
+        }
         return dictionary;
     }
 
@@ -362,8 +361,4 @@ public class Worker {
         return ;
     }
 
-    public void loadXLStoDictionary(String xlsPath ) {
-
-
-    }
 }
